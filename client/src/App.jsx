@@ -3,7 +3,11 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import "./App.css";
 
-const API = "http://localhost:5000/api/tasks";
+const API = import.meta.env.VITE_API_URL
+  ? (import.meta.env.VITE_API_URL.endsWith("/api/tasks")
+      ? import.meta.env.VITE_API_URL
+      : `${import.meta.env.VITE_API_URL.replace(/\/$/, "")}/api/tasks`)
+  : (import.meta.env.DEV ? "http://localhost:5000/api/tasks" : "/api/tasks");
 
 function App() {
   const [tasks, setTasks] = useState([]);

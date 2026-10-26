@@ -2,6 +2,8 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const path = require("path");
+const fs = require("fs");
 require("dotenv").config();
 
 const Task = require("./task");
@@ -11,10 +13,15 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Test the server
-app.get("/", (req, res) => {
-    res.send("Task Manager Backend is Running!");
-});
+// Test the server or serve static client
+const clientDistPath = path.join(__dirname, "../client/dist");
+if (fs.existsSync(clientDistPath)) {
+    app.use(express.static(clientDistPath));
+} else {
+    app.get("/", (req, res) => {
+        res.send("Task Manager Backend is Running!");
+    });
+}
 
 // Get all tasks
 app.get("/api/tasks", async (req, res) => {
@@ -88,13 +95,24 @@ app.delete("/api/tasks/:id", async (req, res) => {
     }
 });
 
+// If frontend is built, serve index.html for any non-API routes
+if (fs.existsSync(clientDistPath)) {
+    app.get("*", (req, res, next) => {
+        if (!req.path.startsWith("/api")) {
+            return res.sendFile(path.join(clientDistPath, "index.html"));
+        }
+        next();
+    });
+}
+
 // Connect to MongoDB and start the server
+const PORT = process.env.PORT || 5000;
 mongoose.connect(process.env.MONGO_URI)
     .then(() => {
         console.log("MongoDB connected successfully");
 
-        app.listen(process.env.PORT || 5000, () => {
-            console.log("Server running on port 5000");
+        app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
         });
     })
     .catch((error) => {
