@@ -95,10 +95,10 @@ app.delete("/api/tasks/:id", async (req, res) => {
     }
 });
 
-// If frontend is built, serve index.html for any non-API routes
+// If frontend is built, serve index.html for any non-API GET routes (Express 5 compatible)
 if (fs.existsSync(clientDistPath)) {
-    app.get("*", (req, res, next) => {
-        if (!req.path.startsWith("/api")) {
+    app.use((req, res, next) => {
+        if (req.method === "GET" && !req.path.startsWith("/api")) {
             return res.sendFile(path.join(clientDistPath, "index.html"));
         }
         next();
